@@ -43,6 +43,7 @@
     <button class="btn-f both active" data-f="both">Ambos</button>
   </div>
 
+  <button id="tree-btn" class="btn-theme" title="Painel de regiões" onclick="toggleTreePanel()">&#9776;</button>
   <button id="theme-btn" class="btn-theme" title="Alternar tema">🌙</button>
 </div>
 
@@ -78,6 +79,14 @@
   <div id="map-wrap">
     <div id="map"></div>
     <div id="city-toast"></div>
+  </div>
+
+  <div id="tree-panel">
+    <div class="tp-head">
+      <span class="tp-title">Regiões</span>
+      <button class="tp-close" onclick="toggleTreePanel()" title="Recolher">‹</button>
+    </div>
+    <div id="tree-content" class="tp-content"></div>
   </div>
 </div>
 

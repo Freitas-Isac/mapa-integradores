@@ -53,6 +53,23 @@ const COORDS = {
   "Dias d'Ávila_BA":[-12.6128,-38.3011],"João Monlevade_MG":[-19.8072,-43.1722]
 };
 
+/* ── REGIONS ─────────────────────────────────────────── */
+const REGIONS = {
+  'Norte':        ['AC', 'AM', 'AP', 'PA', 'RO', 'RR', 'TO'],
+  'Nordeste':     ['AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE'],
+  'Centro-Oeste': ['DF', 'GO', 'MS', 'MT'],
+  'Sudeste':      ['ES', 'MG', 'RJ', 'SP'],
+  'Sul':          ['PR', 'RS', 'SC'],
+};
+const REGION_ORDER = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'];
+
+function stateRegion(uf) {
+  for (const [r, ufs] of Object.entries(REGIONS)) {
+    if (ufs.includes(uf)) return r;
+  }
+  return 'Outros';
+}
+
 /* ── STATE ───────────────────────────────────────────── */
 let map, burnCluster, burnPlusCluster;
 let allMarkers = [];
@@ -194,6 +211,7 @@ function applyFilter() {
     (showBurnP && m._plan === 'Combo - Plano Burn+')
   ).length;
   document.getElementById('sv').textContent = visible;
+  renderTree();
 }
 
 /* ── DETAIL PANEL ────────────────────────────────────── */
@@ -370,6 +388,146 @@ document.getElementById('theme-btn').addEventListener('click', () => {
   document.body.dataset.theme = isDark ? 'light' : 'dark';
   document.getElementById('theme-btn').textContent = isDark ? '🌙' : '☀️';
 });
+
+/* ── TREE PANEL ──────────────────────────────────────── */
+function renderTree() {
+  const filtered = allData.filter(d => {
+    if (activeFilter === 'both')     return true;
+    if (activeFilter === 'burn')     return d.plano === 'Combo - Plano Burn';
+    if (activeFilter === 'burnplus') return d.plano === 'Combo - Plano Burn+';
+    return false;
+  });
+
+  const byRegion = {};
+  filtered.forEach(d => {
+    const r = stateRegion(d.estado);
+    if (!byRegion[r]) byRegion[r] = {};
+    if (!byRegion[r][d.estado]) byRegion[r][d.estado] = {};
+    if (!byRegion[r][d.estado][d.cidade]) byRegion[r][d.estado][d.cidade] = [];
+    byRegion[r][d.estado][d.cidade].push(d);
+  });
+
+  function sumStats(items) {
+    return {
+      count:  items.length,
+      usinas: items.reduce((s, x) => s + (x.totalUsinas || 0), 0),
+      kwp:    items.reduce((s, x) => s + (x.totalPotenciaKwp || 0), 0),
+    };
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  let html = '';
+  REGION_ORDER.forEach(region => {
+    if (!byRegion[region]) return;
+    const states = byRegion[region];
+    const allItems = Object.values(states).flatMap(c => Object.values(c).flat());
+    const rs = sumStats(allItems);
+
+    html += `<div class="t-block t-region">
+      <div class="t-row" onclick="tToggle(this)">
+        <span class="t-caret">▶</span>
+        <div class="t-info">
+          <div class="t-name">${esc(region)} <span class="t-cnt">${rs.count}</span></div>
+          <div class="t-meta">${fmtN(rs.usinas)} usinas &nbsp;·&nbsp; ${fmtKwp(rs.kwp)}</div>
+        </div>
+      </div>
+      <div class="t-kids">`;
+
+    Object.keys(states).sort().forEach(uf => {
+      const cities = states[uf];
+      const stateItems = Object.values(cities).flat();
+      const ss = sumStats(stateItems);
+
+      html += `<div class="t-block t-state">
+        <div class="t-row" onclick="tToggle(this)">
+          <span class="t-caret">▶</span>
+          <div class="t-info">
+            <div class="t-name">${esc(uf)} <span class="t-cnt">${ss.count}</span></div>
+            <div class="t-meta">${fmtN(ss.usinas)} usinas &nbsp;·&nbsp; ${fmtKwp(ss.kwp)}</div>
+          </div>
+        </div>
+        <div class="t-kids">`;
+
+      Object.keys(cities).sort().forEach(city => {
+        const companies = cities[city];
+        const cs = sumStats(companies);
+
+        html += `<div class="t-block t-city">
+          <div class="t-row" data-city="${esc(city)}" data-uf="${esc(uf)}" onclick="tCity(this)">
+            <span class="t-caret">▶</span>
+            <div class="t-info">
+              <div class="t-name">${esc(city)} <span class="t-cnt">${cs.count}</span></div>
+              <div class="t-meta">${fmtN(cs.usinas)} usinas &nbsp;·&nbsp; ${fmtKwp(cs.kwp)}</div>
+            </div>
+          </div>
+          <div class="t-kids">`;
+
+        companies.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(d => {
+          const isBp = d.plano === 'Combo - Plano Burn+';
+          html += `<div class="t-row t-company" onclick="treeOpenDetail(${d.id})">
+            <span class="t-dot" style="background:${isBp ? '#8B5CF6' : '#F97316'}"></span>
+            <div class="t-info">
+              <div class="t-name">${esc(d.nome)}</div>
+              <div class="t-meta">${fmtN(d.totalUsinas)} usinas &nbsp;·&nbsp; ${fmtKwp(d.totalPotenciaKwp)}</div>
+            </div>
+          </div>`;
+        });
+
+        html += `</div></div>`;
+      });
+
+      html += `</div></div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  document.getElementById('tree-content').innerHTML =
+    html || '<div style="padding:16px;color:var(--text3);font-size:13px;text-align:center">Sem dados</div>';
+}
+
+function tToggle(row) {
+  const kids = row.nextElementSibling;
+  if (!kids) return;
+  const open = kids.style.display === 'block';
+  kids.style.display = open ? 'none' : 'block';
+  const caret = row.querySelector('.t-caret');
+  if (caret) caret.textContent = open ? '▶' : '▼';
+  row.classList.toggle('t-open', !open);
+}
+
+function tCity(row) {
+  tToggle(row);
+  const city = row.dataset.city;
+  const uf   = row.dataset.uf;
+  const c = COORDS[`${city}_${uf}`];
+  if (c) map.setView([c[0], c[1]], 11, { animate: true });
+}
+
+function treeOpenDetail(id) {
+  openDetail(id);
+  const m = allMarkers.find(mk => mk._did === id);
+  if (m) {
+    map.setView(m.getLatLng(), 12, { animate: true });
+    setTimeout(() => m.openPopup(), 400);
+  }
+}
+
+function toggleTreePanel() {
+  const panel = document.getElementById('tree-panel');
+  const btn   = document.getElementById('tree-btn');
+  const isHidden = panel.style.display === 'none';
+
+  panel.style.display = isHidden ? 'flex' : 'none';
+  btn.innerHTML = isHidden ? '&#10005;' : '&#9776;';
+  btn.title     = isHidden ? 'Fechar painel' : 'Abrir painel de regiões';
+
+  // Leaflet não detecta mudanças de layout automaticamente
+  setTimeout(() => map.invalidateSize(), 0);
+}
 
 /* ── BOOT ────────────────────────────────────────────── */
 async function boot() {
