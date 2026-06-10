@@ -634,38 +634,55 @@ body {
 }
 [data-theme="light"] .t-region > .t-row .t-meta { color: #555555; }
 
-/* ── ESTADO — médio, cinza claro ─────────────────────── */
-.t-state > .t-row { padding-left: 22px; }
+/* ── ESTADO — médio, quase-branco frio ───────────────── */
+.t-state > .t-row {
+  padding-left: 22px;
+  background: rgba(255,255,255,.025);
+}
 .t-state > .t-row .t-name {
   font-size: 14px;
   font-weight: 600;
-  color: #D4D4D4;
+  color: #DAE4EF;
 }
-[data-theme="light"] .t-state > .t-row .t-name { color: #333333; }
+[data-theme="light"] .t-state > .t-row .t-name { color: #1E3A58; }
 .t-state > .t-row .t-meta {
   font-size: 11px;
-  color: #888888;
+  color: #8A9DB5;
 }
-[data-theme="light"] .t-state > .t-row .t-meta { color: #666666; }
+[data-theme="light"] .t-state > .t-row .t-meta { color: #4A6A8A; }
 
-/* ── CIDADE — itálico + azul acinzentado ─────────────── */
+/* Estado aberto: borda laranja sutil no header + fechamento visual do grupo */
+.t-state.t-open > .t-row {
+  border-left: 2px solid rgba(249,115,22,.45);
+  padding-left: 20px;
+}
+.t-state.t-open > .t-kids {
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 3px;
+}
+
+/* ── CIDADE — tom azul-ardósia escuro, claramente recuado */
 .t-city > .t-row {
   padding-left: 34px;
-  border-left: 2px solid #2D3748;
+  border-left: 2px solid rgba(249,115,22,.18);
+  background: rgba(0,0,0,.13);
 }
-[data-theme="light"] .t-city > .t-row { border-left-color: #CBD5E0; }
+[data-theme="light"] .t-city > .t-row {
+  background: rgba(0,0,0,.04);
+  border-left-color: rgba(249,115,22,.25);
+}
 .t-city > .t-row .t-name {
   font-size: 13px;
   font-weight: 500;
   font-style: italic;
-  color: #94A3B8;
+  color: #5E7E9E;
 }
-[data-theme="light"] .t-city > .t-row .t-name { color: #475569; }
+[data-theme="light"] .t-city > .t-row .t-name { color: #5A7A9A; }
 .t-city > .t-row .t-meta {
   font-size: 11px;
-  color: #64748B;
+  color: #4A6478;
 }
-[data-theme="light"] .t-city > .t-row .t-meta { color: #94A3B8; }
+[data-theme="light"] .t-city > .t-row .t-meta { color: #7A9BB5; }
 
 /* ── EMPRESA — sem itálico, cinza escuro + dot maior ─── */
 .t-company { padding-left: 46px; }
