@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SolarZ — Mapa de Integradores</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
 <link rel="stylesheet" href="style.css"/>
 </head>
 <body data-theme="dark">
@@ -24,7 +22,7 @@
 
   <div class="header-sep"></div>
 
-  <span class="header-label">Mapa de Integradores · <em>Planos Burn</em></span>
+  <span class="header-label">Mapa de Integradores · <em>Planos Ativos</em></span>
 
   <div class="header-spacer"></div>
 
@@ -38,9 +36,9 @@
   </div>
 
   <div class="filters">
-    <button class="btn-f burn" data-f="burn">🔥 Burn</button>
-    <button class="btn-f burnplus" data-f="burnplus">⚡ Burn+</button>
-    <button class="btn-f both active" data-f="both">Ambos</button>
+    <button class="btn-f outros active" data-f="outros">Outros</button>
+    <button class="btn-f burn active" data-f="burn">🔥 Burn</button>
+    <button class="btn-f burnplus active" data-f="burnplus">⚡ Burn+</button>
   </div>
 
   <button id="tree-btn" class="btn-theme" title="Painel de regiões" onclick="toggleTreePanel()">&#9776;</button>
@@ -61,6 +59,10 @@
       <div class="s-card">
         <span class="s-lbl">Burn+</span>
         <span class="s-val purple" id="sp">—</span>
+      </div>
+      <div class="s-card">
+        <span class="s-lbl">Outros</span>
+        <span class="s-val gray" id="so">—</span>
       </div>
       <div class="s-card">
         <span class="s-lbl">Total</span>
@@ -86,12 +88,19 @@
       <span class="tp-title">Regiões</span>
       <button class="tp-close" onclick="toggleTreePanel()" title="Recolher">‹</button>
     </div>
+    <div class="tp-search-wrap">
+      <svg class="tp-search-ico" viewBox="0 0 20 20" fill="none">
+        <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <input id="tree-search" type="text" placeholder="Buscar cidade ou empresa…" autocomplete="off" spellcheck="false"/>
+      <button id="tree-search-clear" class="tp-search-clear" title="Limpar">✕</button>
+    </div>
     <div id="tree-content" class="tp-content"></div>
   </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

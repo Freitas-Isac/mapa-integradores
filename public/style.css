@@ -169,12 +169,14 @@ body {
   background: var(--purple);
   color: #fff;
 }
-.btn-f.both {
+.btn-f.both,
+.btn-f.outros {
   background: transparent;
   border-color: var(--border);
   color: var(--text2);
 }
-.btn-f.both.active {
+.btn-f.both.active,
+.btn-f.outros.active {
   background: var(--text);
   border-color: var(--text);
   color: var(--bg);
@@ -246,6 +248,8 @@ body {
 }
 .s-val.orange { color: var(--orange); }
 .s-val.purple { color: var(--purple); }
+.s-val.gray   { color: #6B7280; }
+.s-card:last-child { grid-column: 1 / -1; }
 
 /* detail pane */
 #detail {
@@ -307,8 +311,10 @@ body {
 }
 [data-theme="dark"] .badge-burn   { background: rgba(249,115,22,.2); color: #FB923C; }
 [data-theme="dark"] .badge-burnp  { background: rgba(139,92,246,.2); color: #A78BFA; }
+[data-theme="dark"] .badge-other  { background: rgba(107,114,128,.2); color: #9CA3AF; }
 [data-theme="light"] .badge-burn  { background: #FFF7ED; color: #C2410C; }
 [data-theme="light"] .badge-burnp { background: #EDE9FE; color: #6D28D9; }
+[data-theme="light"] .badge-other { background: #F3F4F6; color: #4B5563; }
 
 .int-card-body { padding: 4px 0; }
 
@@ -492,6 +498,44 @@ body {
 }
 .tp-close:hover { color: var(--orange); }
 
+.tp-search-wrap {
+  position: relative;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.tp-search-ico {
+  position: absolute;
+  left: 22px; top: 50%;
+  transform: translateY(-50%);
+  width: 15px; height: 15px;
+  color: var(--text3);
+  pointer-events: none;
+}
+#tree-search {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 7px 28px 7px 32px;
+  font-size: 13px;
+  outline: none;
+  transition: border .2s;
+}
+#tree-search::placeholder { color: var(--text3); }
+#tree-search:focus { border-color: var(--orange); }
+.tp-search-clear {
+  position: absolute;
+  right: 20px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: var(--text3); cursor: pointer;
+  font-size: 12px; line-height: 1;
+  padding: 2px; display: none;
+}
+.tp-search-clear:hover { color: var(--text); }
+
 .tp-content {
   flex: 1;
   overflow-y: auto;
@@ -594,14 +638,3 @@ body {
 /* Children container — collapsed by default */
 .t-kids { display: none; }
 
-/* ── CLUSTER OVERRIDE ───────────────────────────────── */
-.marker-cluster-small,
-.marker-cluster-medium,
-.marker-cluster-large {
-  background: transparent !important;
-}
-.marker-cluster-small div,
-.marker-cluster-medium div,
-.marker-cluster-large div {
-  background: transparent !important;
-}
