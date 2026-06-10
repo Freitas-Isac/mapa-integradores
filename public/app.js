@@ -617,6 +617,13 @@ function openDetail(id) {
             <div class="info-val">${d.consultor || 'N/D'}</div>
           </div>
         </div>
+        ${d.devComercial ? `<div class="info-row">
+          <div class="info-ico">🚀</div>
+          <div class="info-content">
+            <div class="info-lbl">Dev. Comercial</div>
+            <div class="info-val">${d.devComercial}</div>
+          </div>
+        </div>` : ''}
         <div class="info-row">
           <div class="info-ico">⚡</div>
           <div class="info-content">
@@ -827,7 +834,9 @@ function renderTree() {
       </div>
       <div class="t-kids"${open}>`;
 
-    Object.keys(states).sort().forEach(uf => {
+    Object.keys(states).sort((a, b) =>
+      Object.values(states[b]).flat().length - Object.values(states[a]).flat().length
+    ).forEach(uf => {
       const cities = states[uf];
       const stateItems = Object.values(cities).flat();
       const ss = sumStats(stateItems);
@@ -842,7 +851,9 @@ function renderTree() {
         </div>
         <div class="t-kids"${open}>`;
 
-      Object.keys(cities).sort().forEach(city => {
+      Object.keys(cities).sort((a, b) =>
+        cities[b].length - cities[a].length
+      ).forEach(city => {
         const companies = cities[city];
         const cs = sumStats(companies);
 

@@ -1,3 +1,9 @@
 node_modules/
 .env
 *.log
+
+.vercel
+server.js
+package.json
+package-lock.json
+scripts/

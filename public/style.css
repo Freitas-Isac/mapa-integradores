@@ -583,8 +583,9 @@ body {
 
 .t-info { flex: 1; min-width: 0; overflow: hidden; }
 
+/* Base name/meta — overridden per level below */
 .t-name {
-  font-size: 19px;
+  font-size: 13px;
   font-weight: 600;
   color: #FFFFFF;
   white-space: nowrap;
@@ -592,17 +593,15 @@ body {
   text-overflow: ellipsis;
   line-height: 1.35;
 }
-[data-theme="light"] .t-name { color: #0D0D0D; }
+[data-theme="light"] .t-name { color: #111111; }
+
 .t-meta {
-  font-size: 13px;
-  color: #FFFFFF;
+  font-size: 11px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   margin-top: 2px;
-  opacity: .7;
 }
-[data-theme="light"] .t-meta { color: #0D0D0D; }
 .t-cnt {
   display: inline-block;
   background: var(--orange-dim);
@@ -615,25 +614,79 @@ body {
   vertical-align: middle;
 }
 
-/* Region level */
+/* ── REGIÃO — maior, branco puro, destaque laranja ────── */
 .t-region > .t-row {
-  padding: 11px 14px;
+  padding: 12px 14px 12px 11px;
   background: var(--card);
+  border-left: 3px solid var(--orange);
   border-bottom: 1px solid var(--border);
 }
-.t-region > .t-row .t-name { font-size: 20px; }
+.t-region > .t-row .t-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: .2px;
+}
+[data-theme="light"] .t-region > .t-row .t-name { color: #111111; }
+.t-region > .t-row .t-meta {
+  font-size: 12px;
+  color: #AAAAAA;
+}
+[data-theme="light"] .t-region > .t-row .t-meta { color: #555555; }
 
-/* State level */
-.t-state > .t-row { padding-left: 24px; }
-.t-state > .t-row .t-name { font-size: 19px; }
+/* ── ESTADO — médio, cinza claro ─────────────────────── */
+.t-state > .t-row { padding-left: 22px; }
+.t-state > .t-row .t-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #D4D4D4;
+}
+[data-theme="light"] .t-state > .t-row .t-name { color: #333333; }
+.t-state > .t-row .t-meta {
+  font-size: 11px;
+  color: #888888;
+}
+[data-theme="light"] .t-state > .t-row .t-meta { color: #666666; }
 
-/* City level */
-.t-city > .t-row { padding-left: 38px; }
-.t-city > .t-row .t-name { font-size: 19px; }
+/* ── CIDADE — itálico + azul acinzentado ─────────────── */
+.t-city > .t-row {
+  padding-left: 34px;
+  border-left: 2px solid #2D3748;
+}
+[data-theme="light"] .t-city > .t-row { border-left-color: #CBD5E0; }
+.t-city > .t-row .t-name {
+  font-size: 13px;
+  font-weight: 500;
+  font-style: italic;
+  color: #94A3B8;
+}
+[data-theme="light"] .t-city > .t-row .t-name { color: #475569; }
+.t-city > .t-row .t-meta {
+  font-size: 11px;
+  color: #64748B;
+}
+[data-theme="light"] .t-city > .t-row .t-meta { color: #94A3B8; }
 
-/* Company level */
-.t-company { padding-left: 50px; }
-.t-company .t-name { font-weight: 500; font-size: 19px; }
+/* ── EMPRESA — sem itálico, cinza escuro + dot maior ─── */
+.t-company { padding-left: 46px; }
+.t-company .t-name {
+  font-size: 12px;
+  font-weight: 400;
+  font-style: normal;
+  color: #9CA3AF;
+}
+[data-theme="light"] .t-company .t-name { color: #6B7280; }
+.t-company .t-meta {
+  font-size: 11px;
+  color: #4B5563;
+}
+[data-theme="light"] .t-company .t-meta { color: #9CA3AF; }
+.t-company .t-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 3px;
+  box-shadow: 0 0 0 2px rgba(0,0,0,.3);
+}
 
 /* Children container — collapsed by default */
 .t-kids { display: none; }
