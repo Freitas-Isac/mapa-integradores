@@ -705,45 +705,48 @@ body {
 
 /* ── OVERVIEW PANEL (empty state) ────────────────────── */
 .ov-wrap {
-  padding: 12px 12px 20px;
+  padding: 14px 14px 24px;
 }
 .ov-title {
   font-size: 10px;
   font-weight: 700;
   color: var(--text3);
-  letter-spacing: .9px;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 .ov-card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  border-left: 3px solid var(--orange);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px 14px;
+  margin-bottom: 10px;
 }
 .ov-reg-name {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 5px;
+  margin-bottom: 10px;
 }
-.ov-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  font-size: 11px;
-  line-height: 1.5;
-  margin-top: 2px;
+.ov-divider {
+  height: 1px;
+  background: var(--border);
+  margin-bottom: 10px;
+}
+.ov-grid {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  gap: 8px 10px;
+  align-items: center;
 }
 .ov-lbl {
   font-size: 9.5px;
   font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 3px;
-  flex-shrink: 0;
-  margin-top: 2px;
-  line-height: 1.4;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  align-self: center;
 }
 .ov-lbl-sz {
   background: rgba(249,115,22,.2);
@@ -755,9 +758,22 @@ body {
 }
 [data-theme="light"] .ov-lbl-sz { background: #FFF7ED; color: #C2410C; }
 [data-theme="light"] .ov-lbl-mk { background: #E0F2FE; color: #0284C7; }
-.ov-row-data {
-  color: var(--text2);
-  font-size: 11px;
+.ov-num {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.ov-num strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+.ov-num span {
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin-top: 1px;
 }
 
 /* ── MARKET CITY PANEL (search: no SolarZ integrators) ── */

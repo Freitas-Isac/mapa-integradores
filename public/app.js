@@ -808,14 +808,15 @@ function resetDetail() {
     const mk = marketData.regions[reg] || {};
     html += `<div class="ov-card">
       <div class="ov-reg-name">${reg}</div>
-      <div class="ov-row">
+      <div class="ov-divider"></div>
+      <div class="ov-grid">
         <span class="ov-lbl ov-lbl-sz">SolarZ</span>
-        <span class="ov-row-data">${fmtN(sz.count)} integr. &nbsp;·&nbsp; ${fmtN(sz.usinas)} usinas</span>
+        <div class="ov-num"><strong>${fmtN(sz.count)}</strong><span>Integr.</span></div>
+        <div class="ov-num"><strong>${fmtN(sz.usinas)}</strong><span>Usinas</span></div>
+        ${mk.domicilios ? `<span class="ov-lbl ov-lbl-mk">Brasil</span>
+        <div class="ov-num"><strong>${fmtN(mk.usinas||0)}</strong><span>Usinas</span></div>
+        <div class="ov-num"><strong>${fmtN(mk.domicilios)}</strong><span>Domicílios</span></div>` : ''}
       </div>
-      ${mk.domicilios ? `<div class="ov-row">
-        <span class="ov-lbl ov-lbl-mk">Brasil</span>
-        <span class="ov-row-data">${fmtN(mk.usinas||0)} usinas &nbsp;·&nbsp; ${fmtN(mk.domicilios)} dom.</span>
-      </div>` : ''}
     </div>`;
   });
   html += '</div>';
