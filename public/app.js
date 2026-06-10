@@ -444,6 +444,7 @@ function stateRegion(uf) {
 let map, burnCluster, burnPlusCluster, othersCluster;
 let allMarkers = [];
 let allData = [];
+let marketData = null;
 let activeFilters = new Set(['outros', 'burn', 'burnplus']);
 let treeQuery = '';
 
@@ -655,6 +656,12 @@ function fmtKwp(v) { return v != null ? Number(v).toLocaleString('pt-BR', {minim
 function normalize(s) {
   return s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
 }
+function normKey(cidade, uf) {
+  return normalize(cidade) + '_' + uf;
+}
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 /* ── SEARCH ──────────────────────────────────────────── */
 const cityInput = document.getElementById('city-input');
@@ -692,6 +699,20 @@ function doSearch() {
   allMarkers.forEach(m => m.setIcon(pinIcon(m._plan, false)));
 
   if (!matches.length) {
+    // Try market data for this city
+    if (marketData) {
+      const mktMatches = Object.entries(marketData.cities)
+        .filter(([k]) => k.split('_').slice(0, -1).join('_').includes(q));
+      if (mktMatches.length) {
+        mktMatches.sort((a, b) => (b[1].domicilios || 0) - (a[1].domicilios || 0));
+        const mktCity = mktMatches[0][1];
+        showMarketCityPanel(mktCity);
+        const c = COORDS[`${mktCity.nome}_${mktCity.uf}`];
+        if (c) map.setView(c, 11, { animate: true });
+        showToast(`Dados de mercado: ${mktCity.nome} — ${mktCity.uf}`, false);
+        return;
+      }
+    }
     showToast(`Nenhum resultado para "${cityInput.value}"`, true);
     return;
   }
@@ -763,10 +784,77 @@ treeSearchClear.addEventListener('click', () => {
 });
 
 function resetDetail() {
+  if (!marketData || !allData.length) {
+    document.getElementById('detail').innerHTML = `
+      <div class="empty-state" id="empty">
+        <div class="empty-ico">📍</div>
+        <p>Clique em um marcador<br>para ver os detalhes.</p>
+      </div>`;
+    return;
+  }
+
+  // SolarZ totals per region
+  const szByRegion = {};
+  allData.forEach(d => {
+    const r = stateRegion(d.estado);
+    if (!szByRegion[r]) szByRegion[r] = { count: 0, usinas: 0 };
+    szByRegion[r].count++;
+    szByRegion[r].usinas += d.totalUsinas || 0;
+  });
+
+  let html = `<div class="ov-wrap"><div class="ov-title">Panorama do Mercado Solar</div>`;
+  REGION_ORDER.forEach(reg => {
+    const sz = szByRegion[reg] || { count: 0, usinas: 0 };
+    const mk = marketData.regions[reg] || {};
+    html += `<div class="ov-card">
+      <div class="ov-reg-name">${reg}</div>
+      <div class="ov-row">
+        <span class="ov-lbl ov-lbl-sz">SolarZ</span>
+        <span class="ov-row-data">${fmtN(sz.count)} integr. &nbsp;·&nbsp; ${fmtN(sz.usinas)} usinas</span>
+      </div>
+      ${mk.domicilios ? `<div class="ov-row">
+        <span class="ov-lbl ov-lbl-mk">Brasil</span>
+        <span class="ov-row-data">${fmtN(mk.usinas||0)} usinas &nbsp;·&nbsp; ${fmtN(mk.domicilios)} dom.</span>
+      </div>` : ''}
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('detail').innerHTML = html;
+}
+
+function showMarketCityPanel(mktCity) {
+  const nome = esc(mktCity.nome || '');
+  const uf   = esc(mktCity.uf   || '');
   document.getElementById('detail').innerHTML = `
-    <div class="empty-state" id="empty">
-      <div class="empty-ico">📍</div>
-      <p>Clique em um marcador<br>para ver os detalhes.</p>
+    <div class="mkt-city-card">
+      <div class="mkt-city-head">
+        <h2>${nome} — ${uf}</h2>
+        <span class="badge badge-mkt">Mercado</span>
+      </div>
+      <div class="mkt-no-sz">Sem integradores SolarZ nesta cidade</div>
+      <div class="int-card-body">
+        ${mktCity.usinas != null ? `<div class="info-row">
+          <div class="info-ico">⚡</div>
+          <div class="info-content">
+            <div class="info-lbl">Usinas instaladas (Brasil)</div>
+            <div class="info-val">${fmtN(mktCity.usinas)}</div>
+          </div>
+        </div>` : ''}
+        ${mktCity.potKw != null ? `<div class="info-row">
+          <div class="info-ico">🔆</div>
+          <div class="info-content">
+            <div class="info-lbl">Potência instalada</div>
+            <div class="info-val">${fmtN(Math.round(mktCity.potKw))} kW</div>
+          </div>
+        </div>` : ''}
+        ${mktCity.domicilios != null ? `<div class="info-row">
+          <div class="info-ico">🏠</div>
+          <div class="info-content">
+            <div class="info-lbl">Domicílios ocupados</div>
+            <div class="info-val">${fmtN(mktCity.domicilios)}</div>
+          </div>
+        </div>` : ''}
+      </div>
     </div>`;
 }
 
@@ -809,10 +897,6 @@ function renderTree() {
     };
   }
 
-  function esc(s) {
-    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
   const open  = isSearching ? ' style="display:block"' : '';
   const caret = isSearching ? '▼' : '▶';
   const rowCls = isSearching ? ' t-open' : '';
@@ -823,6 +907,7 @@ function renderTree() {
     const states = byRegion[region];
     const allItems = Object.values(states).flatMap(c => Object.values(c).flat());
     const rs = sumStats(allItems);
+    const mktR = marketData ? (marketData.regions[region] || {}) : {};
 
     html += `<div class="t-block t-region">
       <div class="t-row${rowCls}" onclick="tToggle(this)">
@@ -830,6 +915,7 @@ function renderTree() {
         <div class="t-info">
           <div class="t-name">${esc(region)} <span class="t-cnt">${rs.count}</span></div>
           <div class="t-meta">${fmtN(rs.usinas)} usinas &nbsp;·&nbsp; ${fmtKwp(rs.kwp)}</div>
+          ${mktR.domicilios != null ? `<div class="t-mkt">${fmtN(mktR.usinas||0)} usinas &nbsp;·&nbsp; ${fmtN(mktR.domicilios)} dom. Brasil</div>` : ''}
         </div>
       </div>
       <div class="t-kids"${open}>`;
@@ -840,6 +926,7 @@ function renderTree() {
       const cities = states[uf];
       const stateItems = Object.values(cities).flat();
       const ss = sumStats(stateItems);
+      const mktS = marketData ? (marketData.states[uf] || {}) : {};
 
       html += `<div class="t-block t-state">
         <div class="t-row${rowCls}" onclick="tToggle(this)">
@@ -847,6 +934,7 @@ function renderTree() {
           <div class="t-info">
             <div class="t-name">${esc(uf)} <span class="t-cnt">${ss.count}</span></div>
             <div class="t-meta">${fmtN(ss.usinas)} usinas &nbsp;·&nbsp; ${fmtKwp(ss.kwp)}</div>
+            ${mktS.domicilios != null ? `<div class="t-mkt">${fmtN(mktS.usinas||0)} usinas &nbsp;·&nbsp; ${fmtN(mktS.domicilios)} dom. Brasil</div>` : ''}
           </div>
         </div>
         <div class="t-kids"${open}>`;
@@ -856,6 +944,7 @@ function renderTree() {
       ).forEach(city => {
         const companies = cities[city];
         const cs = sumStats(companies);
+        const mktC = marketData ? (marketData.cities[normKey(city, uf)] || {}) : {};
 
         html += `<div class="t-block t-city">
           <div class="t-row${rowCls}" data-city="${esc(city)}" data-uf="${esc(uf)}" onclick="tCity(this)">
@@ -863,6 +952,7 @@ function renderTree() {
             <div class="t-info">
               <div class="t-name">${esc(city)} <span class="t-cnt">${cs.count}</span></div>
               <div class="t-meta">${fmtN(cs.usinas)} usinas &nbsp;·&nbsp; ${fmtKwp(cs.kwp)}</div>
+              ${mktC.domicilios != null ? `<div class="t-mkt">${fmtN(mktC.usinas||0)} usinas &nbsp;·&nbsp; ${fmtN(mktC.domicilios)} dom. Brasil</div>` : ''}
             </div>
           </div>
           <div class="t-kids"${open}>`;
@@ -937,8 +1027,11 @@ function toggleTreePanel() {
 async function boot() {
   initMap();
   try {
-    const res  = await fetch('/data.json');
-    const json = await res.json();
+    const [dataRes, mktRes] = await Promise.all([
+      fetch('/data.json'),
+      fetch('/market.json'),
+    ]);
+    const json = await dataRes.json();
     if (!json.ok) throw new Error(json.error);
 
     allData = json.data;
@@ -951,6 +1044,13 @@ async function boot() {
     document.getElementById('sp').textContent = burnp;
     document.getElementById('so').textContent = outros;
     document.getElementById('st').textContent = allData.length;
+
+    try {
+      marketData = await mktRes.json();
+    } catch (_) { /* market.json opcional */ }
+
+    resetDetail();
+    renderTree();
   } catch (e) {
     console.error(e);
     showToast('Erro ao carregar dados: ' + e.message, true);

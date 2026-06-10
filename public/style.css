@@ -691,3 +691,113 @@ body {
 /* Children container — collapsed by default */
 .t-kids { display: none; }
 
+/* ── MARKET DATA (tree panel) ─────────────────────────── */
+.t-mkt {
+  font-size: 10.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+  color: #38BDF8;
+  opacity: .8;
+}
+[data-theme="light"] .t-mkt { color: #0284C7; opacity: 1; }
+
+/* ── OVERVIEW PANEL (empty state) ────────────────────── */
+.ov-wrap {
+  padding: 12px 12px 20px;
+}
+.ov-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: .9px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.ov-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.ov-reg-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+.ov-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  margin-top: 2px;
+}
+.ov-lbl {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.ov-lbl-sz {
+  background: rgba(249,115,22,.2);
+  color: #FB923C;
+}
+.ov-lbl-mk {
+  background: rgba(56,189,248,.15);
+  color: #38BDF8;
+}
+[data-theme="light"] .ov-lbl-sz { background: #FFF7ED; color: #C2410C; }
+[data-theme="light"] .ov-lbl-mk { background: #E0F2FE; color: #0284C7; }
+.ov-row-data {
+  color: var(--text2);
+  font-size: 11px;
+}
+
+/* ── MARKET CITY PANEL (search: no SolarZ integrators) ── */
+.mkt-city-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 2px solid #38BDF8;
+  border-radius: 0 0 8px 8px;
+}
+.mkt-city-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.mkt-city-head h2 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.badge-mkt {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+[data-theme="dark"] .badge-mkt  { background: rgba(56,189,248,.15); color: #38BDF8; }
+[data-theme="light"] .badge-mkt { background: #E0F2FE; color: #0284C7; }
+.mkt-no-sz {
+  padding: 7px 16px;
+  font-size: 11px;
+  color: var(--text3);
+  font-style: italic;
+  border-bottom: 1px solid var(--border);
+}
+
