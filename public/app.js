@@ -57,7 +57,7 @@ const COORDS = {
 let map, burnCluster, burnPlusCluster;
 let allMarkers = [];
 let allData = [];
-let activeFilter = 'burn';
+let activeFilter = 'both';
 
 /* ── TILES ───────────────────────────────────────────── */
 // We use a single OSM tile layer and invert it via CSS for dark mode.
