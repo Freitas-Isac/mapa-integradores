@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SolarZ — Mapa de Integradores</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body data-theme="dark">
+
+<div id="loading">
+  <div class="loader-ring"></div>
+  <p>Carregando integradores…</p>
+</div>
+
+<div id="header">
+  <div class="logo">
+    <div class="logo-icon">S</div>
+    <span class="logo-text">Solar<strong>Z</strong></span>
+  </div>
+
+  <div class="header-sep"></div>
+
+  <span class="header-label">Mapa de Integradores · <em>Planos Burn</em></span>
+
+  <div class="header-spacer"></div>
+
+  <div class="search-wrap">
+    <svg class="search-ico" viewBox="0 0 20 20" fill="none">
+      <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.8"/>
+      <path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <input id="city-input" type="text" placeholder="Buscar cidade…" autocomplete="off" spellcheck="false"/>
+    <button id="search-clear" class="search-clear" title="Limpar">✕</button>
+  </div>
+
+  <div class="filters">
+    <button class="btn-f burn active" data-f="burn">🔥 Burn</button>
+    <button class="btn-f burnplus" data-f="burnplus">⚡ Burn+</button>
+    <button class="btn-f both" data-f="both">Ambos</button>
+  </div>
+
+  <button id="theme-btn" class="btn-theme" title="Alternar tema">🌙</button>
+</div>
+
+<div id="main">
+  <div id="sidebar">
+    <div id="stats">
+      <div class="s-card">
+        <span class="s-lbl">Visíveis</span>
+        <span class="s-val orange" id="sv">—</span>
+      </div>
+      <div class="s-card">
+        <span class="s-lbl">Burn</span>
+        <span class="s-val orange" id="sb">—</span>
+      </div>
+      <div class="s-card">
+        <span class="s-lbl">Burn+</span>
+        <span class="s-val purple" id="sp">—</span>
+      </div>
+      <div class="s-card">
+        <span class="s-lbl">Total</span>
+        <span class="s-val" id="st">—</span>
+      </div>
+    </div>
+
+    <div id="detail">
+      <div class="empty-state" id="empty">
+        <div class="empty-ico">📍</div>
+        <p>Clique em um marcador<br>para ver os detalhes.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="map-wrap">
+    <div id="map"></div>
+    <div id="city-toast"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
