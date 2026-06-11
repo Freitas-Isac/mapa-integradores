@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="style.css"/>
 </head>
-<body data-theme="dark">
+<body data-theme="light">
 
 <div id="loading">
   <div class="loader-ring"></div>
@@ -39,6 +39,15 @@
     <button class="btn-f outros active" data-f="outros">Outros</button>
     <button class="btn-f burn active" data-f="burn">🔥 Burn</button>
     <button class="btn-f burnplus active" data-f="burnplus">⚡ Burn+</button>
+  </div>
+
+  <div class="header-sep"></div>
+
+  <div class="plan-filter-wrap">
+    <select id="plan-filter" class="plan-select">
+      <option value="">Filtrar por plano…</option>
+    </select>
+    <button id="plan-filter-clear" class="plan-clear" title="Limpar filtro" style="display:none">✕</button>
   </div>
 
   <button id="tree-btn" class="btn-theme" title="Painel de regiões" onclick="toggleTreePanel()">&#9776;</button>
@@ -81,6 +90,14 @@
   <div id="map-wrap">
     <div id="map"></div>
     <div id="city-toast"></div>
+
+    <div id="city-panel">
+      <div id="city-panel-head">
+        <span id="city-panel-title">—</span>
+        <button id="city-panel-close" onclick="closeCityPanel()" title="Fechar">✕</button>
+      </div>
+      <div id="city-panel-cards"></div>
+    </div>
   </div>
 
   <div id="tree-panel" style="display:none">

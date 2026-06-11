@@ -447,6 +447,8 @@ let allData = [];
 let marketData = null;
 let activeFilters = new Set(['outros', 'burn', 'burnplus']);
 let treeQuery = '';
+let activePlanFilter = null;
+let extrasData = {};
 
 /* ── TILES ───────────────────────────────────────────── */
 // We use a single OSM tile layer and invert it via CSS for dark mode.
@@ -518,7 +520,7 @@ function buildMarkers(data) {
     marker.bindPopup(`
       <div class="popup-body">
         <div class="popup-badge"><span class="${badgeCls}">${badgeTxt}</span></div>
-        <div class="popup-name">${d.nome}</div>
+        <div class="popup-name">#${d.id} — ${d.nome}</div>
         <div class="popup-loc">📍 ${d.cidade} — ${d.estado}</div>
         <button class="popup-btn" onclick="openDetail(${d.id})">Ver detalhes →</button>
       </div>
@@ -545,6 +547,15 @@ function buildMarkers(data) {
 
 /* ── FILTER ──────────────────────────────────────────── */
 function applyFilter() {
+  if (activePlanFilter !== null) {
+    if (!map.hasLayer(burnCluster))     map.addLayer(burnCluster);
+    if (!map.hasLayer(burnPlusCluster)) map.addLayer(burnPlusCluster);
+    if (!map.hasLayer(othersCluster))   map.addLayer(othersCluster);
+    document.getElementById('sv').textContent = allMarkers.length;
+    renderTree();
+    return;
+  }
+
   const showBurn   = activeFilters.has('burn');
   const showBurnP  = activeFilters.has('burnplus');
   const showOthers = activeFilters.has('outros');
@@ -576,20 +587,38 @@ function openDetail(id) {
   const badgeCls = isBp ? 'badge badge-burnp' : isBurn ? 'badge badge-burn' : 'badge badge-other';
   const badgeTxt = isBp ? '⚡ Combo - Plano Burn+' : isBurn ? '🔥 Combo - Plano Burn' : d.plano || 'Outro';
 
+  const ext = extrasData[String(d.id)] || null;
+  const extHtml = ext ? [
+    ext.desempenhoJornada != null ? `<div class="info-row">
+          <div class="info-ico">📊</div>
+          <div class="info-content">
+            <div class="info-lbl">Desempenho Jornada</div>
+            <div class="info-val">${ext.desempenhoJornada}%</div>
+          </div>
+        </div>` : '',
+    ext.usinas30d != null ? `<div class="info-row">
+          <div class="info-ico">📈</div>
+          <div class="info-content">
+            <div class="info-lbl">Usinas instaladas (últ. 30d)</div>
+            <div class="info-val">${fmtN(ext.usinas30d)}</div>
+          </div>
+        </div>` : '',
+    ext.receita30d != null ? `<div class="info-row">
+          <div class="info-ico">💰</div>
+          <div class="info-content">
+            <div class="info-lbl">Receita (últ. 30d)</div>
+            <div class="info-val">${fmtBRL(ext.receita30d)}</div>
+          </div>
+        </div>` : '',
+  ].join('') : '';
+
   document.getElementById('detail').innerHTML = `
     <div class="int-card">
       <div class="int-card-head">
-        <h2>${d.nome}</h2>
+        <h2><span class="int-id-prefix">#${d.id}</span> ${d.nome}</h2>
         <span class="${badgeCls}">${isBp ? 'Burn+' : isBurn ? 'Burn' : 'Outro'}</span>
       </div>
       <div class="int-card-body">
-        <div class="info-row">
-          <div class="info-ico">🆔</div>
-          <div class="info-content">
-            <div class="info-lbl">ID do Integrador</div>
-            <div class="info-val mono">#${d.id}</div>
-          </div>
-        </div>
         <div class="info-row">
           <div class="info-ico">🏷️</div>
           <div class="info-content">
@@ -639,6 +668,7 @@ function openDetail(id) {
             <div class="info-val">${fmtKwp(d.totalPotenciaKwp)}</div>
           </div>
         </div>
+        ${extHtml}
       </div>
     </div>
   `;
@@ -652,6 +682,7 @@ function fmtDate(s) {
 }
 function fmtN(v)   { return v != null ? Number(v).toLocaleString('pt-BR') : 'N/D'; }
 function fmtKwp(v) { return v != null ? Number(v).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' kWp' : 'N/D'; }
+function fmtBRL(v) { return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
 
 function normalize(s) {
   return s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
@@ -872,6 +903,10 @@ function renderTree() {
   const q = normalize(treeQuery);
 
   const filtered = allData.filter(d => {
+    if (activePlanFilter !== null) {
+      if (d.plano !== activePlanFilter) return false;
+      return !isSearching || normalize(d.nome).includes(q) || normalize(d.cidade).includes(q);
+    }
     if (d.plano === 'Combo - Plano Burn+') { if (!activeFilters.has('burnplus')) return false; }
     else if (d.plano === 'Combo - Plano Burn') { if (!activeFilters.has('burn')) return false; }
     else { if (!activeFilters.has('outros')) return false; }
@@ -930,7 +965,7 @@ function renderTree() {
       const mktS = marketData ? (marketData.states[uf] || {}) : {};
 
       html += `<div class="t-block t-state">
-        <div class="t-row${rowCls}" onclick="tToggle(this)">
+        <div class="t-row${rowCls}" data-uf="${esc(uf)}" onclick="tState(this)">
           <span class="t-caret">${caret}</span>
           <div class="t-info">
             <div class="t-name">${esc(uf)} <span class="t-cnt">${ss.count}</span></div>
@@ -947,31 +982,44 @@ function renderTree() {
         const cs = sumStats(companies);
         const mktC = marketData ? (marketData.cities[normKey(city, uf)] || {}) : {};
 
-        html += `<div class="t-block t-city">
-          <div class="t-row${rowCls}" data-city="${esc(city)}" data-uf="${esc(uf)}" onclick="tCity(this)">
-            <span class="t-caret">${caret}</span>
-            <div class="t-info">
-              <div class="t-name">${esc(city)} <span class="t-cnt">${cs.count}</span></div>
-              <div class="t-meta">${fmtN(cs.usinas)} usinas &nbsp;·&nbsp; ${fmtKwp(cs.kwp)}</div>
-              ${mktC.domicilios != null ? `<div class="t-mkt">${fmtN(mktC.usinas||0)} usinas &nbsp;·&nbsp; ${fmtN(mktC.domicilios)} dom. Brasil</div>` : ''}
-            </div>
-          </div>
-          <div class="t-kids"${open}>`;
-
-        companies.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(d => {
-          const isBp   = d.plano === 'Combo - Plano Burn+';
-          const isBurn = d.plano === 'Combo - Plano Burn';
-          const dotColor = isBp ? '#8B5CF6' : isBurn ? '#F97316' : '#6B7280';
-          html += `<div class="t-row t-company" onclick="treeOpenDetail(${d.id})">
-            <span class="t-dot" style="background:${dotColor}"></span>
-            <div class="t-info">
-              <div class="t-name">${esc(d.nome)}</div>
-              <div class="t-meta">${fmtN(d.totalUsinas)} usinas &nbsp;·&nbsp; ${fmtKwp(d.totalPotenciaKwp)}</div>
+        if (!isSearching) {
+          html += `<div class="t-block t-city">
+            <div class="t-row" data-city="${esc(city)}" data-uf="${esc(uf)}" onclick="tCity(this)">
+              <div class="t-info">
+                <div class="t-name">${esc(city)} <span class="t-cnt">${cs.count}</span></div>
+                <div class="t-meta">${fmtN(cs.usinas)} usinas &nbsp;·&nbsp; ${fmtKwp(cs.kwp)}</div>
+                ${mktC.domicilios != null ? `<div class="t-mkt">${fmtN(mktC.usinas||0)} usinas &nbsp;·&nbsp; ${fmtN(mktC.domicilios)} dom. Brasil</div>` : ''}
+              </div>
+              <span class="t-panel-arrow">›</span>
             </div>
           </div>`;
-        });
+        } else {
+          html += `<div class="t-block t-city">
+            <div class="t-row t-open" data-city="${esc(city)}" data-uf="${esc(uf)}" onclick="tCity(this)">
+              <span class="t-caret">▼</span>
+              <div class="t-info">
+                <div class="t-name">${esc(city)} <span class="t-cnt">${cs.count}</span></div>
+                <div class="t-meta">${fmtN(cs.usinas)} usinas &nbsp;·&nbsp; ${fmtKwp(cs.kwp)}</div>
+                ${mktC.domicilios != null ? `<div class="t-mkt">${fmtN(mktC.usinas||0)} usinas &nbsp;·&nbsp; ${fmtN(mktC.domicilios)} dom. Brasil</div>` : ''}
+              </div>
+            </div>
+            <div class="t-kids" style="display:block">`;
 
-        html += `</div></div>`;
+          companies.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(d => {
+            const isBp   = d.plano === 'Combo - Plano Burn+';
+            const isBurn = d.plano === 'Combo - Plano Burn';
+            const dotColor = isBp ? '#8B5CF6' : isBurn ? '#F97316' : '#6B7280';
+            html += `<div class="t-row t-company" onclick="treeOpenDetail(${d.id})">
+              <span class="t-dot" style="background:${dotColor}"></span>
+              <div class="t-info">
+                <div class="t-name"><span class="t-id-prefix">#${d.id}</span> ${esc(d.nome)}</div>
+                <div class="t-meta">${fmtN(d.totalUsinas)} usinas &nbsp;·&nbsp; ${fmtKwp(d.totalPotenciaKwp)}</div>
+              </div>
+            </div>`;
+          });
+
+          html += `</div></div>`;
+        }
       });
 
       html += `</div></div>`;
@@ -995,11 +1043,152 @@ function tToggle(row) {
 }
 
 function tCity(row) {
-  tToggle(row);
   const city = row.dataset.city;
   const uf   = row.dataset.uf;
+
+  if (treeQuery) {
+    tToggle(row);
+  } else {
+    showCityPanel(city, uf);
+  }
+
   const c = COORDS[`${city}_${uf}`];
   if (c) map.setView([c[0], c[1]], 11, { animate: true });
+}
+
+function showCityContext(city, uf) {
+  const companies = allData.filter(d => d.cidade === city && d.estado === uf);
+  const sz = {
+    count:  companies.length,
+    usinas: companies.reduce((s, d) => s + (d.totalUsinas || 0), 0),
+    kwp:    companies.reduce((s, d) => s + (d.totalPotenciaKwp || 0), 0),
+  };
+  const mktC = marketData ? (marketData.cities[normKey(city, uf)] || {}) : {};
+
+  document.getElementById('detail').innerHTML = `
+    <div class="ov-wrap">
+      <div class="ov-ctx-head">
+        <button class="ov-back" onclick="resetDetail();closeCityPanel()">← Panorama</button>
+        <span class="ov-ctx-title">${esc(city)} — ${esc(uf)}</span>
+      </div>
+      <div class="ov-card">
+        <div class="ov-grid">
+          <span class="ov-lbl ov-lbl-sz">SolarZ</span>
+          <div class="ov-num"><strong>${fmtN(sz.count)}</strong><span>Integr.</span></div>
+          <div class="ov-num"><strong>${fmtN(sz.usinas)}</strong><span>Usinas</span></div>
+          ${mktC.domicilios != null ? `<span class="ov-lbl ov-lbl-mk">Brasil</span>
+          <div class="ov-num"><strong>${fmtN(mktC.usinas||0)}</strong><span>Usinas</span></div>
+          <div class="ov-num"><strong>${fmtN(mktC.domicilios)}</strong><span>Domicílios</span></div>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function showStateContext(uf) {
+  const companies = allData.filter(d => d.estado === uf);
+  const sz = {
+    count:  companies.length,
+    usinas: companies.reduce((s, d) => s + (d.totalUsinas || 0), 0),
+    kwp:    companies.reduce((s, d) => s + (d.totalPotenciaKwp || 0), 0),
+  };
+  const mktS = marketData ? (marketData.states[uf] || {}) : {};
+
+  document.getElementById('detail').innerHTML = `
+    <div class="ov-wrap">
+      <div class="ov-ctx-head">
+        <button class="ov-back" onclick="resetDetail()">← Panorama</button>
+        <span class="ov-ctx-title">${esc(uf)}</span>
+      </div>
+      <div class="ov-card">
+        <div class="ov-grid">
+          <span class="ov-lbl ov-lbl-sz">SolarZ</span>
+          <div class="ov-num"><strong>${fmtN(sz.count)}</strong><span>Integr.</span></div>
+          <div class="ov-num"><strong>${fmtN(sz.usinas)}</strong><span>Usinas</span></div>
+          ${mktS.domicilios != null ? `<span class="ov-lbl ov-lbl-mk">Brasil</span>
+          <div class="ov-num"><strong>${fmtN(mktS.usinas||0)}</strong><span>Usinas</span></div>
+          <div class="ov-num"><strong>${fmtN(mktS.domicilios)}</strong><span>Domicílios</span></div>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderIntegradorCard(d) {
+  const planList = (d.planos && d.planos.length) ? d.planos : [d.plano || 'Sem plano'];
+  const badgesHtml = planList.map(p => {
+    const bp   = p === 'Combo - Plano Burn+';
+    const burn = p === 'Combo - Plano Burn';
+    const cls  = bp ? 'badge badge-burnp' : burn ? 'badge badge-burn' : 'badge badge-other';
+    const txt  = bp ? '⚡ Burn+' : burn ? '🔥 Burn' : esc(p);
+    return `<span class="${cls}">${txt}</span>`;
+  }).join('');
+  const ex = extrasData[String(d.id)];
+  return `<div class="ci-card" onclick="treeOpenDetail(${d.id})">
+    <div class="ci-card-badge">${badgesHtml}</div>
+    <div class="ci-card-name"><span class="ci-card-id">#${d.id}</span>${esc(d.nome)}</div>
+    <div class="ci-card-stats">
+      <div class="ci-stat"><span class="ci-stat-val">${fmtN(d.totalUsinas || 0)}</span><span class="ci-stat-lbl">usinas</span></div>
+      <div class="ci-stat"><span class="ci-stat-val">${fmtKwp(d.totalPotenciaKwp || 0)}</span><span class="ci-stat-lbl">potência</span></div>
+      ${ex && ex.usinas30d  != null ? `<div class="ci-stat"><span class="ci-stat-val ci-stat-accent">${fmtN(ex.usinas30d)}</span><span class="ci-stat-lbl">usinas +30d</span></div>` : ''}
+      ${ex && ex.receita30d != null ? `<div class="ci-stat"><span class="ci-stat-val ci-stat-accent">${fmtBRL(ex.receita30d)}</span><span class="ci-stat-lbl">receita 30d</span></div>` : ''}
+    </div>
+  </div>`;
+}
+
+function filterCompanies(predicate) {
+  return allData.filter(d => {
+    if (!predicate(d)) return false;
+    if (activePlanFilter !== null) return d.plano === activePlanFilter;
+    if (d.plano === 'Combo - Plano Burn+') return activeFilters.has('burnplus');
+    if (d.plano === 'Combo - Plano Burn')  return activeFilters.has('burn');
+    return activeFilters.has('outros');
+  }).sort((a, b) => {
+    const ra = extrasData[String(a.id)]?.receita30d ?? -1;
+    const rb = extrasData[String(b.id)]?.receita30d ?? -1;
+    if (rb !== ra) return rb - ra;
+    return a.nome.localeCompare(b.nome, 'pt-BR');
+  });
+}
+
+function openCardsPanel(title, companies) {
+  document.getElementById('city-panel-title').textContent = title;
+  document.getElementById('city-panel-cards').innerHTML = companies.map(renderIntegradorCard).join('');
+  document.getElementById('city-panel').classList.add('visible');
+}
+
+function showCityPanel(city, uf) {
+  document.querySelectorAll('.t-city > .t-row').forEach(r => r.classList.remove('t-selected'));
+  document.querySelectorAll('.t-city > .t-row').forEach(r => {
+    if (r.dataset.city === city && r.dataset.uf === uf) r.classList.add('t-selected');
+  });
+  showCityContext(city, uf);
+  const companies = filterCompanies(d => d.cidade === city && d.estado === uf);
+  openCardsPanel(`${city} — ${uf}  ·  ${companies.length} integrador${companies.length !== 1 ? 'es' : ''}`, companies);
+}
+
+function showStatePanelCards(uf) {
+  document.querySelectorAll('.t-city > .t-row.t-selected').forEach(r => r.classList.remove('t-selected'));
+  const companies = filterCompanies(d => d.estado === uf);
+  openCardsPanel(`${uf}  ·  ${companies.length} integrador${companies.length !== 1 ? 'es' : ''}`, companies);
+}
+
+function closeCityPanel() {
+  document.getElementById('city-panel').classList.remove('visible');
+  document.querySelectorAll('.t-city > .t-row.t-selected').forEach(r => r.classList.remove('t-selected'));
+  resetDetail();
+}
+
+function tState(row) {
+  const wasOpen = row.classList.contains('t-open');
+  tToggle(row);
+  const uf = row.dataset.uf;
+  if (!wasOpen && uf) {
+    document.getElementById('city-panel').classList.remove('visible');
+    document.querySelectorAll('.t-city > .t-row.t-selected').forEach(r => r.classList.remove('t-selected'));
+    showStateContext(uf);
+    showStatePanelCards(uf);
+  } else {
+    closeCityPanel();
+  }
 }
 
 function treeOpenDetail(id) {
@@ -1024,19 +1213,62 @@ function toggleTreePanel() {
   setTimeout(() => map.invalidateSize(), 0);
 }
 
+/* ── PLAN FILTER ─────────────────────────────────────── */
+function populatePlanFilter(data) {
+  const plans = [...new Set(data.map(d => d.plano || 'Sem plano'))].sort((a, b) => {
+    if (a === 'Combo - Plano Burn+') return -1;
+    if (b === 'Combo - Plano Burn+') return  1;
+    if (a === 'Combo - Plano Burn')  return -1;
+    if (b === 'Combo - Plano Burn')  return  1;
+    return a.localeCompare(b, 'pt-BR');
+  });
+  const sel = document.getElementById('plan-filter');
+  const def = sel.options[0].cloneNode(true);
+  sel.innerHTML = '';
+  sel.appendChild(def);
+  plans.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p; o.textContent = p;
+    sel.appendChild(o);
+  });
+}
+
+document.getElementById('plan-filter').addEventListener('change', function () {
+  activePlanFilter = this.value || null;
+  document.getElementById('plan-filter-clear').style.display = activePlanFilter ? 'inline-flex' : 'none';
+  const data = activePlanFilter ? allData.filter(d => d.plano === activePlanFilter) : allData;
+  buildMarkers(data);
+  if (activePlanFilter && allMarkers.length > 0) {
+    const bounds = L.latLngBounds(allMarkers.map(m => m.getLatLng()));
+    if (bounds.isValid()) map.fitBounds(bounds, { padding: [60, 60], maxZoom: 8 });
+  }
+  resetDetail();
+});
+
+document.getElementById('plan-filter-clear').addEventListener('click', () => {
+  const sel = document.getElementById('plan-filter');
+  sel.value = '';
+  activePlanFilter = null;
+  document.getElementById('plan-filter-clear').style.display = 'none';
+  buildMarkers(allData);
+  resetDetail();
+});
+
 /* ── BOOT ────────────────────────────────────────────── */
 async function boot() {
   initMap();
   try {
-    const [dataRes, mktRes] = await Promise.all([
+    const [dataRes, mktRes, extRes] = await Promise.all([
       fetch('/data.json'),
       fetch('/market.json'),
+      fetch('/extras.json'),
     ]);
     const json = await dataRes.json();
     if (!json.ok) throw new Error(json.error);
 
     allData = json.data;
     buildMarkers(allData);
+    populatePlanFilter(allData);
 
     const burn   = allData.filter(d => d.plano === 'Combo - Plano Burn').length;
     const burnp  = allData.filter(d => d.plano === 'Combo - Plano Burn+').length;
@@ -1049,6 +1281,9 @@ async function boot() {
     try {
       marketData = await mktRes.json();
     } catch (_) { /* market.json opcional */ }
+    try {
+      extrasData = await extRes.json();
+    } catch (_) { /* extras.json opcional */ }
 
     resetDetail();
     renderTree();
