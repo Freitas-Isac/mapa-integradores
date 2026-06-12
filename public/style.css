@@ -828,50 +828,58 @@ body {
 }
 [data-theme="light"] .t-region > .t-row .t-meta { color: #555555; }
 
-/* ── ESTADO — médio, quase-branco frio ───────────────── */
+/* ── ESTADO ───────────────────────────────────────────── */
 .t-state > .t-row {
-  padding-left: 22px;
-  background: rgba(255,255,255,.025);
+  padding-left: 20px;
+  background: rgba(255,255,255,.08);
+  border-left: 3px solid rgba(249,115,22,.6);
+}
+[data-theme="light"] .t-state > .t-row {
+  background: #DDE6EF;
+  border-left-color: rgba(249,115,22,.8);
 }
 .t-state > .t-row .t-name {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   color: #DAE4EF;
 }
-[data-theme="light"] .t-state > .t-row .t-name { color: #1E3A58; }
+[data-theme="light"] .t-state > .t-row .t-name { color: #1A3550; }
 .t-state > .t-row .t-meta {
   font-size: 11px;
   color: #8A9DB5;
 }
-[data-theme="light"] .t-state > .t-row .t-meta { color: #4A6A8A; }
+[data-theme="light"] .t-state > .t-row .t-meta { color: #3D5F7A; }
 
-/* Estado aberto: borda laranja sutil no header + fechamento visual do grupo */
 .t-state.t-open > .t-row {
-  border-left: 2px solid rgba(249,115,22,.45);
-  padding-left: 20px;
+  border-left-color: var(--orange);
+  background: rgba(255,255,255,.12);
+}
+[data-theme="light"] .t-state.t-open > .t-row {
+  background: #CDD9E5;
+  border-left-color: var(--orange);
 }
 .t-state.t-open > .t-kids {
   border-bottom: 2px solid var(--border);
   margin-bottom: 3px;
 }
 
-/* ── CIDADE — tom azul-ardósia escuro, claramente recuado */
+/* ── CIDADE ───────────────────────────────────────────── */
 .t-city > .t-row {
-  padding-left: 34px;
-  border-left: 2px solid rgba(249,115,22,.18);
-  background: rgba(0,0,0,.13);
+  padding-left: 36px;
+  border-left: 2px solid rgba(249,115,22,.12);
+  background: rgba(0,0,0,.22);
 }
 [data-theme="light"] .t-city > .t-row {
-  background: rgba(0,0,0,.04);
-  border-left-color: rgba(249,115,22,.25);
+  background: #FFFFFF;
+  border-left: 3px solid rgba(249,115,22,.15);
 }
 .t-city > .t-row .t-name {
   font-size: 13px;
-  font-weight: 500;
-  font-style: italic;
-  color: #5E7E9E;
+  font-weight: 400;
+  font-style: normal;
+  color: #7A9ABB;
 }
-[data-theme="light"] .t-city > .t-row .t-name { color: #5A7A9A; }
+[data-theme="light"] .t-city > .t-row .t-name { color: #111111; }
 .t-city > .t-row .t-meta {
   font-size: 11px;
   color: #4A6478;

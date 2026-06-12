@@ -976,7 +976,7 @@ function renderTree() {
         <div class="t-kids"${open}>`;
 
       Object.keys(cities).sort((a, b) =>
-        cities[b].length - cities[a].length
+        a.localeCompare(b, 'pt-BR')
       ).forEach(city => {
         const companies = cities[city];
         const cs = sumStats(companies);
